@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unilyf Monash</title>
+
+    <!-- Compiled and minified CSS -->
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.99.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.99.0/js/materialize.min.js"></script>
+
+    <meta name="description"
+          content="Where Monash Students Connect and Learntogether. Compare timetables with friends at Monash University."/>
+    <meta name="keywords"
+          content="Compare timetable monash, monash timetable, Unilyf Monash, Learntogether Monash, connect and learntogether Compare timetable with friends Monash"/>
+    <meta name="copyright" content="Ishan Joshi, Arni Mittal, Surayez Rahman"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+
+
+    <meta property="og:url" content="https://learntog.github.io/login/"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="Unilyf Monash - Connect and LearnTogether"/>
+    <meta property="og:description"
+          content="Compare timetable with friends. See who's in your class or find free time to hang out at uni."/>
+
+    <meta property="og:image"
+          content="http://http://cdn2.iconfinder.com/data/icons/crazy-paparazzi-collection-svg/100/Noun_Project_100Icon_10px_grid_2-47-512.png">
+    <meta property="og:image:secure_url" content="https://learntog.github.io/img/uniicon.png"/>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script src="js/analytics.js"></script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/2.0.0/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.0.0/firebaseui.css"/>
+
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({
+            google_ad_client: "ca-pub-9709599744007897",
+            enable_page_level_ads: true
+        });
+    </script>
+
+    <style>
+        .promotion {
+            width: 80%;
+            margin-left: 10%;
+            height: 250px;
+            opacity: 0.1;
+        }
+
+        .promotion:hover {
+            opacity: 1;
+        }
+
+        .pad {
+            padding: 15%;
+        }
+
+        .pad .row {
+            padding: 2%;
+        }
+
+        .valign-wrapper {
+
+            height: 270px;
+        }
+
+        .pad h5 {
+
+            padding-bottom: 2%;
+        }
+
+        .aboutprofile img {
+            opacity: 0.85;
+            padding: 5%;
+            width: 75%;
+            height: 300px;
+        }
+
+        .aboutprofile img:hover {
+            opacity: 1;
+        }
+    </style>
+
+    <script>
+
+        function signout() {
+            firebase.auth().signOut();
+        }
+
+        initApp = function () {
+
+
+            firebase.auth().onAuthStateChanged(function (user) {
+                if (user) {
+
+                    document.getElementById('continueasbutton').innerHTML = "Continue as, " + user.displayName;
+                    document.getElementById('continueasbutton').style.display = "block";
+                    document.getElementById('firebaseui-auth-container').style.display = "none";
+//                    console.log(user.displayName);
+
+
+                    // User is signed in.
+                } else {
+                    document.getElementById('continueasbutton').style.display = "none";
+                    document.getElementById('firebaseui-auth-container').style.display = "block";
+                    // User is signed out.
+//                    alert("Don't try to hack");
+//                    console.log("Signed out.. ");
+                }
+            }, function (error) {
+                console.log(error);
+            });
+        };
+
+        window.addEventListener('load', function () {
+            initApp();
+        });
+    </script>
+
+</head>
+<body>
+
+<script src="https://www.gstatic.com/firebasejs/4.1.1/firebase.js"></script>
+<script>
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyBLA6sDqXwnMX6tJayM4dmYCPRzt5CW91M",
+        authDomain: "learntogether-a250b.firebaseapp.com",
+        databaseURL: "https://learntogether-a250b.firebaseio.com",
+        projectId: "learntogether-a250b",
+        storageBucket: "learntogether-a250b.appspot.com",
+        messagingSenderId: "3175571907"
+    };
+    firebase.initializeApp(config);
+</script>
+
+<script type="text/javascript">
+    // FirebaseUI config.
+
+    function setURLembed() {
+        //
+        $('.modal').modal('open');
+    }
+
+    var uiConfig = {
+        signInSuccessUrl: 'login/',
+        signInOptions: [
+            // Leave the lines as is for the providers you want to offer your users.
+            firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            //            firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+            //            firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+            //            firebase.auth.GithubAuthProvider.PROVIDER_ID,
+            firebase.auth.EmailAuthProvider.PROVIDER_ID,
+            //            firebase.auth.PhoneAuthProvider.PROVIDER_ID
+        ],
+        // Terms of service url.
+        tosUrl: '<your-tos-url>'
+    };
+
+    // Initialize the FirebaseUI Widget using Firebase.
+    var ui = new firebaseui.auth.AuthUI(firebase.auth());
+    // The start method will wait until the DOM is loaded.
+    ui.start('#firebaseui-auth-container', uiConfig);
+</script>
+
+<div id="fb-root"></div>
+<script>(function (d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s);
+    js.id = id;
+    js.src = "//connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.9&appId=1913393705562842";
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+<div class="navbar-fixed">
+    <nav class="blue white-text" style="box-shadow: none">
+        <div class="nav-wrapper">
+            <a style="padding-left: 2%;" href="#!" class="brand-logo">Unilyf Monash</a>
+
+            <ul class="right hide-on-med-and-down">
+
+
+                <!--<li><a href="#">FAQ's</a></li>-->
+                <!--<li><a onclick="setURLembed()" href="#modalcontact">Contact Us</a></li>-->
+            </ul>
+
+        </div>
+    </nav>
+</div>
+<div class="row" style="padding-bottom: 0%">
+    <div style="padding: 10%; -webkit-clip-path: polygon(0 0, 100% 0, 100% 96%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 96%, 0 100%);" class="blue white-text center col s12 m12 l12">
+        <h2 class="hide-on-med-and-down">Unilyf Monash</h2>
+        <h5>Connect and Learntogether</h5>
+        <br>
+        <h6><i>Unilyf Monash aims to provide an enhanced, connected and a collaborative Monash university
+            experience.</i></h6>
+        <br>
+        <div style="display: none" id="firebaseui-auth-container"></div>
+        <a href="login/" id="continueasbutton"
+           style="display: none; margin-left: 20%; width: 60%; border-radius: 6px; box-shadow: none; border: 1px solid white"
+           class="truncate blue btn">Continue as, Ishan Joshi
+        </a>
+        <br>
+        <h6>Please use your browser for an enhanced experience</h6>
+
+
+    </div>
+
+
+    <div style="padding: 5%; padding-top: 3%;" class=" col s12 m12 l10 offset-l1 ">
+
+
+
+
+        <div style="padding: 2%" class="fb-like" data-href="https://learntog.github.io/" data-layout="standard"
+             data-action="like"
+             data-size="large" data-show-faces="false" data-share="true"></div>
+
+
+        <div class="row">
+
+            <div id="comparediv" class="transparent col s12 m10 offset-m1 l10 offset-l1 pad">
+                <div class="row">
+                    <h5>Compare timetable</h5>
+                    <div class="col s10 offset-s1 m8 offset-m2 l4">
+
+                        <img class="promotion" src="img/compare.png">
+
+                    </div>
+                    <div style="vertical-align: middle" class=" valign-wrapper   col s10 offset-s1 m8 offset-m2 l8">
+
+                        <div>
+
+                            <p>
+                                See if your friends are in the same classes as you.
+                            </p>
+
+                            <p> Compare your timetable with your facebook friends, so you can find time to catch up at
+                                uni.</p>
+                        </div>
+                    </div>
+
+                </div>
+                <!---->
+            </div>
+            <div id="peersdiv" class="col s12 m10 offset-m1 l10 offset-l1 pad">
+                <div class="row">
+
+
+                    <h5>Take notes with peers</h5>
+                    <div class="col s10 offset-s1 m8 offset-m2 l4">
+
+                        <img src="img/notes.png" class="promotion">
+                    </div>
+                    <div style="vertical-align: middle" class=" valign-wrapper   col s10 offset-s1 m8 offset-m2 l8">
+
+                        <div>
+
+                            <p>
+                                Take notes with classmates on Google Drive.
+                            </p>
+
+                            <p> Create presentations, spreadsheets and drawings with your friends to enhance your
+                                learning.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div id="newlyfdiv" class="col s12 m10 offset-m1 l10 offset-l1 pad">
+                <div class="row">
+                    <h5>Enjoy a new unilyf</h5>
+                    <div class="col s10 offset-s1 m8 offset-m2 l4">
+
+                        <img src="img/peers.png" class="promotion">
+                    </div>
+                    <div style="vertical-align: middle" class=" valign-wrapper   col s10 offset-s1 m8 offset-m2 l8">
+
+                        <div>
+
+                            <p>
+                                Put in preferences for times for classes that don't suit you. We'll then find a match.
+                            </p>
+
+                            <p>
+                                Connect with people who're free at a given time.
+                            </p>
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+        <script>
+            var options = [
+                {
+                    selector: '#comparediv .promotion', offset: 200, callback: function (el) {
+                    Materialize.fadeInImage($(el));
+                }
+                },
+                {
+                    selector: '#peersdiv .promotion', offset: 200, callback: function (el) {
+                    Materialize.fadeInImage($(el));
+                }
+                },
+                {
+                    selector: '#newlyfdiv .promotion', offset: 200, callback: function (el) {
+                    Materialize.fadeInImage($(el));
+                }
+                }
+            ];
+            Materialize.scrollFire(options);
+        </script>
+
+
+    </div>
+
+    <section class="divider"></section>
+
+    <div style="padding: 5%" class="grey lighten-3 col s12 l10 offset-l1 ">
+        <h4>About Developers</h4>
+        <div class="row center">
+            <div class="col s12 m4 l4  aboutprofile">
+                <img class="circle" src="img/ishan.jpg"><br>
+                <strong><a target="_blank" href="//ishanjoshi.me">Ishan Joshi</a></strong>
+            </div>
+            <div class="col s12 m4 l4 aboutprofile">
+                <img class="circle" src="img/surayez.png"><br>
+                <strong><a href="#">Surayez Rahman</a></strong>
+            </div>
+            <div class="col s12 m4 l4 aboutprofile">
+                <img class="circle" src="img/arni.png"><br>
+                <strong><a href="#">Arni Mittal</a></strong>
+            </div>
+            <p class="col blue-text s8 offset-s2" style="font-size: 1.7em">We are three first year students who're
+                passionate about making university a more connected and a collaborative experience.</p>
+        </div>
+
+    </div>
+
+</div>
+
+<footer style="padding-top: 0px" class="blue page-footer">
+    <div class="container">
+        <div class="row">
+
+            <div class="col l4 s12">
+                <ul>
+                    <!--<li><a class="grey-text text-lighten-3" href="#!">About</a></li>-->
+                    <li><a onclick="setURLembed()" class="grey-text text-lighten-3" href="#modalcontact">Contact Us</a>
+                    </li>
+                    <li><a class="grey-text text-lighten-3" href="#">Privacy Policy</a></li>
+                    <li><a class="grey-text text-lighten-3" href="#">Wiki</a></li>
+                </ul>
+            </div>
+            <div class="col l8 s12 center" style="padding-top: 3%">
+                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+                    <input type="hidden" name="cmd" value="_s-xclick">
+                    <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
+">
+                    <input type="image" src="https://www.paypalobjects.com/en_AU/i/btn/btn_donate_LG.gif" border="0"
+                           name="submit" alt="PayPal – The safer, easier way to pay online!">
+                    <img alt="" border="0" src="https://www.paypalobjects.com/en_AU/i/scr/pixel.gif" width="1"
+                         height="1">
+                </form>
+            </div>
+
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container">
+            © 2017 Unilyf Monash <p class="grey-text text-lighten-4">Not affiliated with Monash University.</p>
+        </div>
+    </div>
+</footer>
+
+<div id="modalcontact" style="width: 440px; height: 440px;" class="modal">
+    <div class="modal-content" style=" height: 100%;">
+        <div class="fb-page" data-href="https://www.facebook.com/monashunilyf/" data-tabs="messages" data-width="400"
+             data-height="400" data-small-header="true" data-adapt-container-width="true" data-hide-cover="true"
+             data-show-facepile="false">
+            <blockquote cite="https://www.facebook.com/monashunilyf/" class="fb-xfbml-parse-ignore"><a
+                    href="https://www.facebook.com/monashunilyf/">Monash UniLyf</a></blockquote>
+        </div>
+    </div>
+
+</div>
+
+<div class="fixed-action-btn">
+    <a onclick="setURLembed()" class="btn-floating btn-large pulse black lighten-3">
+        <i class="large material-icons">message</i>
+    </a>
+</div>
+
+
+</body>
+</html>

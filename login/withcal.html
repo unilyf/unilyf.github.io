@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unilyf Monash - Dashboard</title>
+    <!-- Basic SEO metadata -->
+    <meta name="description"
+          content="Where Monash Students Connect and Learntogether. Compare timetables with friends at Monash University."/>
+    <meta name="keywords"
+          content="Compare timetable monash, monash timetable, Unilyf Monash, Learntogether Monash, connect and learntogether Compare timetable with friends Monash"/>
+    <meta name="copyright" content="Ishan Joshi, Arni Mittal, Surayez Rahman"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+
+
+    <meta property="og:url" content="https://learntog.github.io/login/"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="Unilyf Monash - Connect and LearnTogether"/>
+    <meta property="og:description"
+          content="Compare timetable with friends. See who's in your class or find free time to hang out at uni."/>
+
+    <meta property="og:image"
+          content="http://http://cdn2.iconfinder.com/data/icons/crazy-paparazzi-collection-svg/100/Noun_Project_100Icon_10px_grid_2-47-512.png">
+    <meta property="og:image:secure_url" content="https://learntog.github.io/img/uniicon.png"/>
+    <!--TODO add the og:image parameter-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/css/materialize.min.css">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.6.0/fullcalendar.css'/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.1/moment.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.6.0/fullcalendar.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/js/materialize.min.js"></script>
+    <script src="../js/analytics.js"></script>
+    <script>
+        shown = 0;
+
+        function toggleload() {
+            $("#calendar").toggleClass("opaque");
+        }
+        var getdata = {
+            setfacebook: function (uid, data) {
+                if (typeof data == 'string' && data != null && data != "") {
+                    localStorage.setItem(uid + "facebook_friends", data);
+                } else if (data != null) {
+                    localStorage.setItem(uid + "facebook_friends", JSON.stringify(data));
+                }
+            },
+            getfacebook: function (uid) {
+                if (localStorage.getItem(uid + "facebook_friends") != null) {
+                    return JSON.parse(localStorage.getItem(uid + "facebook_friends"));
+                } else {
+                    var starCountRef = firebase.database().ref('users/' + uid + '/facebook_friends/');
+                    starCountRef.once('value').then(function (snapshot) {
+                        var friends = snapshot.val();
+                        getdata.setfacebook(uid, friends);
+                        return friends;
+                    });
+                }
+            },
+            getdatafromdb: function (uid, property) {
+                if (property == 'classes') {
+                    var starCountRef = firebase.database().ref('users/' + uid + '/classes/');
+                    starCountRef.once('value').then(function (snapshot) {
+                        var classes = snapshot.val();
+                        if (classes != null || classes != undefined) {
+                            getdata.setproperty(uid, classes, property);
+                            timetablesur = classes;
+                            location.reload();
+                        } else {
+                            alert("Contact us... quote (that impossible null returned from getdatafromdb)");
+                            return null;
+                        }
+                    });
+                }
+            },
+            isaproperty: function (uid, property) {
+                return localStorage.getItem(uid + property) == null || localStorage.getItem(uid + property) == "";
+            },
+            getproperty: function (uid, property) {
+                if (localStorage.getItem(uid + property) != null && JSON.parse(localStorage.getItem(uid + property)) != null) {
+                    return JSON.parse(localStorage.getItem(uid + property));
+                }
+                else {
+                    return null;
+                }
+            },
+            setproperty: function (uid, data, property) {
+                if (typeof data == 'string' && data != null) {
+                    localStorage.setItem(uid + property, data);
+                } else {
+                    if (data != null) {
+                        localStorage.setItem(uid + property, JSON.stringify(data));
+                    }
+                }
+            },
+            clearfacebook: function (uid) {
+                localStorage.removeItem(uid + 'facebook_friends');
+            }
+        };
+        function thisWeekDay(x) {
+            var now = new Date();
+            if (x == now.getDay()) {
+                return now;
+            }
+            else if (x < now.getDay()) {
+                now.setDate(now.getDate() - (now.getDay() - x));
+                return now;
+            }
+            else if (x > now.getDay()) {
+                now.setDate(now.getDate() + (x - now.getDay()));
+                return now;
+            }
+        }
+        uid = "";
+        weektodays = {Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6};
+        function drawoncalendar(timetablesur, whose) {
+            if (timetablesur != null && timetablesur.length > 0) {
+                unitcolor = {};
+                //TODO check length 0 here to uncheck/provide message that other person timetable doesn't have current
+                for (i = 0; i < timetablesur.length; i++) {
+                    var cl = timetablesur[i];
+                    var cld = cl.split("*");
+                    var semester2 = cld[cld.length - 1].split("!!")[0].indexOf('1') == -1;
+                    if (semester2) {
+                        var day = cld[2];
+                        var time = cld[3];
+                        var hour = time.split(":")[0];
+                        var min = time.split(":")[1];
+                        var weektoday = {Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6};
+                        var start = thisWeekDay(weektoday[day]);
+                        start.setHours(hour);
+                        start.setMinutes(min);
+                        start.setSeconds(0);
+                        var unit = cld[0];
+                        if (unitcolor['friendstatic'] == null) {
+                            unitcolor['friendstatic'] = getRandomColor();
+                        }
+                        if (whose == "my") {
+                            ////////////////console.log(unit, unitcolor);
+                            if (unitcolor[unit] == null) {
+                                unitcolor[unit] = getRandomColor();
+                            }
+                            createEventCalendarWithTime(unitcolor[unit], start, "---", cld[0], cld[5], timetablesur[i]);
+                        } else {
+                            $("#" + whose + "color").css('background', unitcolor['friendstatic']);
+                            ////console.log(whose, unitcolor['friendstatic']);
+                            createEventCalendarWithTime(unitcolor['friendstatic'], start, whose, cld[0], cld[5], timetablesur[i]);
+                        }
+                    } else {
+                        //non semester 1 class.
+                    }
+                }
+                if (timetablesur.length > 0 && whose != "my") {
+                    $("#currently_viewing_list").append("<li id='" + whose + "currentlyviewing" + "' class='collection-item'><div>" + facebook_name_key[whose] + "<a style='color: " + unitcolor['friendstatic'] + "' onclick='removethisguy(" + whose + ")' class='secondary-content'><i class='material-icons'>clear</i></a></div></li>");
+                }
+            } else if (whose != 'my' && (timetablesur == [] || timetablesur.length == 0)) {
+                //TODO do a better check here
+                alert("Your friend hasn't uploaded their timetable");
+            } else {
+                loading = document.getElementById("timetableuploadtab");
+                loading.style.visibility = "visible";
+                document.getElementById("calendarviewtab").style.display = "none";
+//                document.getElementById("listviewtab").style.display = "none";
+                addfilelist();
+                $('ul.tabs').tabs('select_tab', 'timetableupload');
+            }
+        }
+        function WriteText(message, data) {
+            message.innerHTML = data;
+        }
+        function convertToList(dic) {
+            var l = [];
+            for (var x in dic) {
+                l.push(x);
+            }
+            return l;
+        }
+        initApp = function () {
+            firebase.auth().onAuthStateChanged(function (user) {
+                if (user) {
+                    var displayName = user.displayName;
+                    var email = user.email;
+                    var emailVerified = user.emailVerified;
+                    var photoURL = user.photoURL;
+                    uid = user.uid;
+                    user.getIdToken().then(function (accessToken) {
+                        uid = user.uid;
+                        firebase.database().ref('users/' + uid + "/email").set(email);
+                        firebase.database().ref('users/' + uid + "/display_name").set(displayName);
+                        firebase.database().ref("id_to_name/" + uid).set(displayName);
+                        document.getElementById('useremail').innerHTML = email;
+                        document.getElementById('userdisplayname').innerHTML = displayName;
+                    });
+                    myfriendlookup = {};
+                    myfriendlookup = getdata.getproperty(uid, 'myfriendlookup');
+                    if (myfriendlookup == null) {
+                        //alert to connect to facebook.
+                    }
+
+                    var listoftips = ['Click on a class to view details.', 'Click the eye in the top right corner to see who\'s seen your timetable'
+                        , 'Click button in bottom right corner for options with your calendar.', 'Message us on facebook for a quick reply.'];
+
+                    var ri = getRandomInt(0, listoftips.length - 1);
+                    $("#tipthistime").html("<strong>Tip: </strong>" + listoftips[ri]);
+
+                    ShowFbFriend();
+                    myfriends = getdata.getproperty(uid, 'friends');
+                    var message = document.getElementById('importantmessage');
+                    var alllogin = document.getElementById('logincomponents');
+                    if (getdata.isaproperty(uid, "classes")) {
+                        var starCountRef = firebase.database().ref('requests/' + uid + '/status');
+                        starCountRef.on('value', function (snapshot) {
+                            var a = snapshot.val();
+                            if (a == null) { //upload,download,success,error
+                                ShowSomething(document.getElementById("logincomponents"));
+                                document.getElementById('message_mobile').innerHTML = "Allocate+ only allows downloading timetable on desktop devices. <br> Use a computer to upload your timetable.";
+                                $("#message_mobile").toggleClass('orange-text');
+                                drawoncalendar(null, "my");
+                            } else if (a != null && a.indexOf("ERR") != -1) {
+                                ShowSomething(document.getElementById("logincomponents"));
+                                ShowSomething(message);
+                                if (a == "ERRONELINE") {
+                                    WriteText(message, "Please select all weeks and reupload your timetable file.");
+                                } else {
+                                    alert("Error: Contact Us \n" + a);
+                                    WriteText(message, "Error occured while processing your timetable, contact us.");
+                                }
+                                drawoncalendar(null, "my");
+                            }
+                            else if (a == "UPLOAD") {
+                                alert("Uploaded successfully");
+                                HideSomething(alllogin);
+                                ShowSomething(message);
+                                WriteText(message, "We'll be back in the time it takes to make instant noodles.");
+                                //TODO add hiding all tabs code
+                            }
+                            else if (a == "DOWNLOADED") {
+                                alert("Your file is currently being proccessed!");
+                                HideSomething(alllogin);
+                                ShowSomething(message);
+                                WriteText(message, "Your file is being processed right now, hang tight...");
+                            }
+                            else if (a == "SUCCESS") {
+                                getdata.getdatafromdb(uid, "classes");
+                            }
+                        });
+                    } else {
+                        ShowSomething(alllogin);
+                        ShowSomething(document.getElementById('calendar'));
+                        HideSomething(message);
+                        ShowSomething(document.getElementById("calendarviewtab"));
+                        ShowSomething(document.getElementById('calendar'));
+                        timetablesur = getdata.getproperty(uid, "classes");
+                        timetablesur = convertToList(timetablesur);
+                        drawoncalendar(timetablesur, "my");
+                        $('ul.tabs').tabs('select_tab', 'calendarviewtab');
+                    }
+                } else {
+                    //TODO check this more carefully for event listenening.
+                    loading = document.getElementById("logincomponents");
+                    loading.style.display = "none";
+                    alert("You're logged out...");
+                    window.location = "../";
+                }
+            }, function (error) {
+                alert("Error signing in\n" + error);
+            });
+        };
+        window.addEventListener('load', function () {
+            initApp()
+        });
+    </script>
+    <script>
+        function drawFriendOnCalendar(fuid) {
+            toggleload();
+            //TODO add read permission denied, val not found check. Pass on null to drawfunction.
+            //TODO store the facebook friend -> uid locally.
+            if (locallstoredsessionclasses[fuid] == null) {
+//                ////console.log("Friend class not local");
+                var starCountRef = firebase.database().ref('facebook_to_id/' + fuid);
+                starCountRef.once('value').then(function (snapshot) {
+                    var uid_fb_friend = snapshot.val();
+                    if (uid_fb_friend != null) {
+                        var starCountRef = firebase.database().ref('users/' + uid_fb_friend + '/classes/');
+                        starCountRef.once('value').then(function (snapshot) {
+                            var friend_tt = snapshot.val();
+                            friend_tt = convertToList(friend_tt);
+                            locallstoredsessionclasses[fuid] = friend_tt;
+                            if (friend_tt != null || friend_tt.length <= 0) {
+                                //////console.log("/users/" + uid_fb_friend + "/viewedby/" + uid);
+                                firebase.database().ref("/users/" + uid_fb_friend + "/viewedby/" + uid).set({time: new Date().toString()});
+                                drawoncalendar(friend_tt, fuid);
+                            } else {
+                                alert("Friend hasn't uploaded timetable. ");
+                            }
+                            toggleload();
+                        });
+                    } else {
+                        alert("Facebook friend not in database yet...");
+                        toggleload();
+                    }
+                });
+            } else {
+//                ////console.log("local");
+                var l = locallstoredsessionclasses[fuid];
+                if (l != null && l.length > 0) {
+                    drawoncalendar(locallstoredsessionclasses[fuid], fuid);
+                    toggleload();
+                } else {
+                    alert("Friend hasn't uploaded their timetable yet.");
+                    toggleload();
+                }
+            }
+        }
+        function elementin(l, e) {
+            return e in l;
+        }
+        function getnondup(units, timetablesur) {
+            var o = [];
+            for (i = 0; i < units.length; i++) {
+                if (!elementin(timetablesur, units[i])) {
+                    o.push(units[i]);
+                }
+            }
+            return o;
+        }
+
+        ashown = 0;
+
+
+        function showInfoModal(currentevent) {
+
+            var data = currentevent.data.split("*");
+
+            currentclassselected = currentevent;
+            var unit = data[0];
+            var type = data[1].replace(/[0-9]/g, '');
+
+            var starCountRef = firebase.database().ref('seperate_unit_list/' + unit + "/" + type);
+            console.log("swaps/" + unit + "/" + type + "/suggested" + "/" + currentclassselected.data);
+//            var starCountRef = firebase.database().ref("swaps/" + unit + "/" + type + "/suggested" + "/" + currentclassselected.data);
+            starCountRef.once('value').then(function (snapshot) {
+
+                var units = snapshot.val();
+
+
+                if (units != null) {
+                    var i = units.indexOf(currentevent.data);
+                    if (i >= 0) {
+                        units.splice(i, 1);
+                    }
+
+                    var o = units;
+
+                    $("#dropdownofswapspossible").innerHTML = "<option disabled >Loading...</option>";
+                    $('select').material_select();
+
+                    if (o != null && o.length > 0) {
+                        var a = "<option disabled >Click for smart suggestions</option>";
+                        for (i = 0; i < o.length; i++) {
+
+                            if (!elementin(timetablesur, o[i])) {
+
+                                var unitd = o[i].split("*");
+                                //////////console.log(unitd);
+                                a += ("<option value='" + units[i] + "'>" + unitd[2] + " " + unitd[3] + "</option>");
+                            }
+                        }
+                        $('select').material_select('destroy');
+                        if (a != "") {
+                            $("#dropdownofswapspossible").html(a);
+                        }
+                        else {
+                            $("#dropdownofswapspossible").html("<option disabled >No swaps available</option>");
+                        }
+
+                    } else {
+                        $("#dropdownofswapspossible").html("<option disabled >No swaps available</option>");
+                    }
+                    $('select').material_select();
+                } else {
+
+                    /*console.log("Show from the other list ");
+
+                     var starCountRef = firebase.database().ref('seperate_unit_list/' + unit + "/" + type);
+                     starCountRef.once('value').then(function (snapshot) {
+                     var units = snapshot.val();
+                     if (units != null) {
+                     var i = units.indexOf(currentevent.data);
+                     units.splice(i, 1);
+
+
+                     var o = units;
+
+                     $("#dropdownofswapspossible").innerHTML = "";
+
+                     if (o != null && o.length > 0) {
+                     var a = "<option disabled >Click to view options</option>";
+                     for (i = 0; i < o.length; i++) {
+
+                     if (!elementin(timetablesur, o[i])) {
+
+                     var unitd = o[i].split("*");
+                     //////////console.log(unitd);
+                     a += ("<option value='" + units[i] + "'>" + unitd[2] + " " + unitd[3] + "</option>");
+                     }
+                     }
+                     $('select').material_select('destroy');
+                     if (a != "") {
+                     $("#dropdownofswapspossible").html(a);
+                     }
+                     else {
+                     $("#dropdownofswapspossible").html("<option disabled >No swaps available</option>");
+                     }
+
+                     } else {
+                     $("#dropdownofswapspossible").html("<option disabled >No swaps available</option>");
+                     }
+                     $('select').material_select();
+                     }
+                     });*/
+
+                }
+
+                showprefs(currentclassselected.data);
+
+
+            });
+
+
+            var mates = currentevent.data;
+
+            $("#class_fb_friends").html("Loading...");
+            $("#other_friends_counter").html("Loading...");
+
+            //TODO this needs to be optimized (...)
+            var starCountRef2 = firebase.database().ref('classes/' + mates + '/users/');
+            starCountRef2.once('value').then(function (snapshot) {
+                var mates = snapshot.val();
+//                $("#other_class_friends").html("<p></p>");
+                $("#class_fb_friends").html("");
+                $("#other_friends_counter").html("");
+                //console.log(mates);
+
+                if (Object.keys(mates).length >= 1) {
+
+                    //////console.log(facebook_name_key, myfriendlookup);
+                    var others = 0;
+//                    ////console.log(mates);
+                    for (var user in mates) {
+                        if (myfriendlookup != null) {
+//                            ////console.log(user in myfriendlookup);
+                            if (user != uid && user in myfriendlookup) {
+                                //append to facebook div.
+
+                                $("#class_fb_friends").append("<li class=\"collection-item\">" +
+                                        "<a target='_blank' href='//facebook.com/" + myfriendlookup[user] + "'>" + facebook_name_key[myfriendlookup[user]] + "</a>" + "</li>")
+                            } else if (user != uid && !(user in myfriendlookup)) {
+//                                $("#other_class_friends").append("");
+                                others++;
+                            }
+                        } else {
+                            //no valid to lookup from on localstorage.
+                            //TODO SHOW connect to facebook :)
+                            /*var fbl = confirm("This website is best when connected to facebook. Do you want to connect to facebook?");
+                             if(fbl && shown==0){
+                             LoadFBUI();
+                             }
+                             shown++;*/
+                            others = Object.keys(mates).length;
+                        }
+                    }
+
+                    $("#other_friends_counter").html("There " + (others == 1 ? "is" : "are") + " " + others + " other " + (others == 1 ? " person" : " people") + "  in your class who use Unilyf Monash");
+
+                } else {
+                    //No one else in the class..
+
+                }
+            });
+
+            $('#moreinfodialog').modal('open');
+
+        }
+
+        $(document).ready(function () {
+            $('.button-collapse').sideNav({
+                        menuWidth: 230,
+                        draggable: true
+                    }
+            );
+            $('.collapsible').collapsible();
+            $('select').material_select();
+
+            $('.modal').modal({
+                        dismissible: true,
+                        opacity: .99,
+                        inDuration: 300,
+                        outDuration: 200,
+                        startingTop: '4%',
+                        endingTop: '10%',
+                        ready: function (modal, trigger) {
+
+                        },
+                        complete: function () {
+                        }
+                    }
+            );
+
+
+            try {
+
+                calendar = $('#calendar');
+                calendar.fullCalendar({
+                    editable: false,
+                    handleWindowResize: true,
+                    weekends: false,
+                    defaultView: 'agendaWeek',
+                    contentHeight: 'auto',
+                    header: false,
+                    minTime: '08:00:00',
+                    maxTime: '21:00:00',
+                    columnFormat: {
+                        week: 'ddd'
+                    },
+                    allDaySlot: false,
+                    displayEventTime: true,
+                    eventClick: function (event) {
+
+                        if (event.e == "---") {
+
+                            var a = event.data.split("*");
+                            document.getElementById('eventdescription').innerHTML = a[0] + " " + a[1];
+                            var d = event.start._d;
+
+                            dayindextoday = {1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday"};
+                            //////console.log(d + "\t" + d.getDay());
+                            document.getElementById('eventtime').innerHTML = dayindextoday[d.getDay()] + "\t" + ("00" + d.getHours().toString()).slice(-2) + ":" + ("00" + d.getMinutes().toString()).slice(-2);
+
+                            currentevent = event;
+                            showInfoModal(currentevent);
+                        }
+
+                    }
+                });
+            } catch (err) {
+            }
+
+        });
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function createEventCalendarWithTime(color, start, e, title, duration, data) {
+            try {
+                newEvent = {};
+
+                ////console.log(e);
+                if (e == "---") {
+                    newEvent.title = title;
+                    newEvent.description = "";
+                } else {
+                    newEvent.title = "";
+                    newEvent.description = "";
+                }
+                newEvent.start = new Date(new Date(start).getTime() + (5 * 60000));
+
+                duration = duration.replace("~", ".");
+                newEvent.end = new Date(start.getTime() + (duration * 60 * 60 * 1000));
+                newEvent.allDay = false;
+                newEvent.color = color;
+                newEvent.data = data;
+                newEvent.e = e;
+
+                $('#calendar').fullCalendar('renderEvent', newEvent, 'stick');
+            } catch (err) {
+
+            }
+        }
+
+        function convertvaltolist(dic) {
+            o = [];
+            for (var each in dic) {
+                o.push(dic[each]);
+            }
+            return o;
+        }
+        function getRandomColor() {
+
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+//            color = '#ABCDEF'
+
+//            var cols = ['810D00', 'CB1558', 'EC36AF',"#44BABD", "#382C56", "#1A4AAD","#3409A6", "#3848FB"]
+            /*
+             var cols = ['FFF07C', 'D99AC5', 'F7C59F', 'D6E681', 'C4E7D4', '00A878', '52D1DC', 'DDC4DD', '824C71', '8E9AAF', '6369D1', '4E598C']
+             return "#" + cols[getRandomInt(0, cols.length - 1)];
+             */
+        }
+        //
+
+
+    </script>
+
+    <style>
+        header, main, footer {
+            padding-left: 230px;
+        }
+
+        #importantmessage {
+            padding-left: 2%;
+        }
+
+        #dropZone ol li p {
+            font-size: 1.3em;
+            color: grey;
+        }
+
+        @media only screen and (max-width: 992px) {
+            header, main, footer {
+                padding-left: 0;
+            }
+        }
+
+        .fc-today {
+            opacity: 0;
+            border: none;
+        }
+
+        .opaque {
+            opacity: 0.15;
+        }
+
+        @media print {
+            header {
+                display: none;
+            }
+
+            #tipthistime {
+                display: none;
+            }
+
+            header, main, footer {
+                padding-left: 0;
+            }
+
+            .fixed-action-btn {
+                display: none;
+            }
+
+            #calendarviewtab {
+                display: none;
+            }
+
+            #calendar {
+                display: block;
+            }
+
+            #currently_viewing_list {
+                display: block;
+            }
+
+            .l8 {
+                width: 100%;
+                float: left
+            }
+
+            .l4 {
+                display: none;
+            }
+        }
+
+    </style>
+
+</head>
+<body>
+
+
+<div id="fb-root"></div>
+<script>
+    function logoff() {
+
+        try {
+            getdata.clearfacebook(uid);
+            FB.logout();
+        } catch (err) {
+
+        }
+        firebase.auth().signOut();
+    }
+
+    function removethisguy(id) {
+
+        $("#" + id + "color").css('background', 'white');
+        $('#' + id + "cbview").prop('checked', false);
+
+        try {
+            $("#" + id + "currentlyviewing").remove();
+        } catch (err) {
+
+        }
+
+        var events = $('#calendar').fullCalendar('clientEvents');
+        //////console.log(events);
+        var todelete = [];
+        for (var event in events) {
+            //////console.log(events[event]);
+            if (events[event].e != "---" && events[event].e == id) {
+
+                $("#calendar").fullCalendar('removeEvents', events[event]._id);
+                todelete.push(events[event]._id);
+            }//TODO replace null with fid/uid
+        }
+
+        //////console.log(todelete);
+
+
+    }
+    locallstoredsessionclasses = {};
+    function ShowFbFriend() {
+
+        facebook_name_key = getdata.getfacebook(uid);
+
+        if (getdata.getproperty(uid, 'showfb') == null) {
+            getdata.setproperty(uid, 0, 'showfb');
+        }
+        //console.log(getdata.getproperty(uid, 'showfb'));
+        if ((getdata.getproperty(uid, 'showfb') % 5 == 0 || getdata.getproperty(uid, 'showfb') == 0 || getdata.getproperty(uid, 'showfb') == 2) && getdata.getproperty(uid, 'showfb') < 30) {
+            alert("Please connect to facebook for an enhanced expereince.");
+        }
+        getdata.setproperty(uid, getdata.getproperty(uid, 'showfb') + 1, 'showfb');
+
+
+        var response = convertToList(facebook_name_key);
+        //TODO store this data in a differnt format and update my friend lookup here
+
+
+        //https://stackoverflow.com/questions/34222775/how-to-create-autocomplete-form-with-materializecss
+        autocompletefbdata = {};
+        fbfriendsnametoid = {};
+        if (response != null) {
+            //TODO show logout facebook button.
+            $("#listfacebookfriends").html("<li class=\"collection-header\"><a><h6 onclick=\"LoadFBUI()\">Facebook Friends<i class=\"material-icons\">refresh</i></h6></a></li>");
+//                    "<li class='collection-item'> <div class='fb-share-button' style='padding: 10px;' data-href='https://learntog.github.io/' " +
+//                    "data-layout='button_count' data-size='large' data-mobile-iframe='true'>" +
+//                    "<a class='fb-xfbml-parse-ignore' target='_blank' " +
+//                    "href='https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Flearntog.github.io%2F&amp;src=sdkpreparse'>" +
+//                    "Share</a> </div></li>");
+            try {
+                for (i = 0; i < response.length; i++) {
+
+                    autocompletefbdata[facebook_name_key[response[i]]] = null;
+                    fbfriendsnametoid[facebook_name_key[response[i]]] = response[i];
+
+                    //TODO add a checkbox event change listner to show/hide.
+                    $("#listfacebookfriends").append("<li  class='collection-item' style='padding-left: 2px'>" +
+                            "<div class='row'style='margin-bottom: 0px'> <div class=\"col s9\"> " +
+                            "<input type=\"checkbox\" name='selectedfbfriends' value='" + response[i] + "' class=\"filled-in\" id=\"" + response[i] + "cbview\" /> " +
+                            "<label class='truncate black-text' for=\"" + response[i] + "cbview\">" + facebook_name_key[response[i]] + "</label> " +
+                            "</div><div id='" + response[i] + "color" + "' style='height: 20px' class='col s1'></div><div class='col center offset-s1 s1'><a class='black-text' target='_blank' href='//facebook.com/" + response[i] + "'><i class=\"material-icons\">face</i></a></div> </div> </li>");
+                    //drawFriendOnCalendar("+response[i]+")
+                }
+
+
+                $('input[name=selectedfbfriends]').change(function () {
+                    var facebook_ids = $(this).val().toString();
+                    if ($(this).is(":checked")) {
+//                       if(locallstoredsessionclasses[facebook_ids])
+                        drawFriendOnCalendar(facebook_ids);
+//                       alert($(this).val().toString());
+                    } else {
+//                       alert(id + "\t is unchecked");
+                        $('#' + facebook_ids + "cbview").prop('checked', false);
+                        removethisguy(facebook_ids);
+                    }
+                });
+
+
+            } catch (err) {
+            }
+        } else {
+            //TODO show connect to facebook button.
+
+        }
+
+
+        $('#autocomplete-input-1').autocomplete({
+            data: autocompletefbdata,
+            limit: 20,
+            onAutocomplete: function (val) {
+                //TODO do something with the value
+
+                var fuid = fbfriendsnametoid[val];
+                if (!$('#' + fuid + "cbview").is(":checked")) {
+
+                    $('#' + fuid + "cbview").prop('checked', true);
+                    drawFriendOnCalendar(fuid);
+
+                } else {
+                    //SET CHECBOX to checked.
+
+                    $('#' + fuid + "cbview").prop('checked', false);
+                    removethisguy(fuid);
+
+                }
+
+                $("#autocomplete-input-1").val("");
+                //TODO rearrage viewing at top
+                //TODO prevent same person from being added twice
+
+
+//                alert("Compare with " + val + "?");
+            },
+            minLength: 1,
+        });
+
+    }
+
+    //TODO prevent showing those don't have a timetable. (doesn't matter actually) for facebook friends
+
+    function HideSomething(a) {
+        a.style.display = "none";
+    }
+    function ShowSomething(a) {
+        a.style.display = "block";
+        a.style.visibility = "visible";
+    }
+
+    function showprefs(dd) {
+        var aa = dd.split("*");
+        var unit = aa[0];
+        var type = aa[1].replace(/[0-9]/g, '');
+        var starCountRef = firebase.database().ref('swaps/' + unit + "/" + type + "/" + uid);
+        starCountRef.once('value').then(function (snapshot) {
+            var va = snapshot.val();
+            $("#currprefslist").html("");
+            if (va != null && va.length > 1) {
+
+                for (var q = 1; q < va.length; q++) {
+                    var g = va[q].split('*');
+                    $("#currprefslist").append("<tr><td>" + g[2] + " " + g[3] + "</td></tr>");
+                }
+            } else {
+                $("#currprefslist").append("<tr><td>No preferences submitted yet." + "</td></tr>");
+            }
+        });
+    }
+
+    function sendClassSwapPref() {
+
+
+        var a = $('option:selected').map(function () {
+            return this.value
+        }).get();
+
+
+        var aa = null;
+        if (a != null) {
+            var x = [currentclassselected.data];
+            for (var i = 0; i < a.length; i++) {
+                aa = a[i].split("*");
+                var unit = aa[0];
+                var type = aa[1].replace(/[0-9]/g, '');
+                x.push(a[i]);
+
+                firebase.database().ref('swaps/' + unit + "/" + type + "/" + uid).set(x);
+            }
+
+            showprefs(currentclassselected.data);
+            alert("Your preferences have been saved. We'll notify you shortly!");
+        }
+    }
+
+
+    function GenerateMyFriendLookup(uidp, facebook_id) {
+
+        var starCountRef = firebase.database().ref('id_to_facebook/' + uidp);
+        starCountRef.once('value').then(function (snapshot) {
+            var va = snapshot.val();
+            if (myfriendlookup == null) {
+                myfriendlookup = {};
+            }
+            myfriendlookup[uidp] = va;
+            getdata.setproperty(uid, myfriendlookup, 'myfriendlookup');
+            myfriendlookup = getdata.getproperty(uid, 'myfriendlookup');
+        });
+
+//        //////console.log(uidp, facebook_id);
+
+    }
+
+    function AddFriendsWithFacebook(dic) {
+
+        //TODO refer to facebook data stored locally. :) to get the name.
+        //////console.log(dic);
+        for (var facebook_id in dic) {
+            var starCountRef = firebase.database().ref('facebook_to_id/' + facebook_id);
+            starCountRef.once('value').then(function (snapshot) {
+                var va = snapshot.val();
+                //////console.log(va + "\t" + facebook_id);
+                if (va != null) {
+                    firebase.database().ref("/users/" + uid + "/friends/" + va).set("I");
+                    GenerateMyFriendLookup(va, facebook_id);
+                }
+            });
+        }
+
+    }
+    function LoadFBUI() {
+        FB.login(function (response) {
+            if (response.authResponse) {
+                fuid = response.authResponse.userID;
+                firebase.database().ref('facebook_to_id/' + fuid).set(uid);
+                firebase.database().ref('id_to_facebook/' + uid).set(fuid);
+
+
+                //TODO add unique code calendar use.
+
+                FB.api(
+                        "/me/friends",
+                        function (response) {
+
+                            if (response && !response.error) {
+
+                                //TODO consider changing the storage in here.
+
+
+                                var cb = response.data;
+                                var dic = {};
+
+                                for (var i = 0; i < cb.length; i++) {
+                                    dic[cb[i].id] = cb[i].name;
+                                }
+
+                                getdata.setfacebook(uid, dic);
+                                firebase.database().ref("/users/" + uid + "/facebook_friends").set(dic);
+
+                                AddFriendsWithFacebook(dic);
+
+                                ShowFbFriend();
+
+                            }
+                        }
+                );
+            }
+        }, {scope: 'email, user_friends'});
+    }
+    window.fbAsyncInit = function () {
+        FB.init({
+            appId: '1913393705562842',
+            cookie: true,
+            xfbml: true,
+            version: 'v2.8'
+        });
+        FB.AppEvents.logPageView();
+
+    };
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {
+            return;
+        }
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    uid = 0;
+
+
+</script>
+
+
+<header>
+    <nav class="blue">
+
+        <ul id="slide-out" class=" side-nav fixed">
+            <li>
+                <div class="userView">
+
+                    <a href="#"><img id="profileimage" class="circle" src="profilepicdefault.png"></a>
+                    <a href="#"><span id="userdisplayname" class="black-text name">  </span></a>
+                    <a href="#"><span id="useremail" class="black-text email"
+                                      style="font-size: 0.8em">  </span></a>
+                </div>
+            </li>
+
+            <script>
+                $(document).ready(function () {
+                    $('.modal').modal();
+                });
+                var qwerty = 0;
+                function showPreviousViews() {
+                    $('#viewing_recent').html("Loading..."); //SET LOADING HERE
+                    var starCountRef = firebase.database().ref('users/' + uid + '/viewedby/');
+                    starCountRef.once('value').then(function (snapshot) {
+                        //TODO convert uid to names.
+                        $('#viewing_recent').html("");
+                        var a = snapshot.val();
+                        for (var each in a) {
+                            try {
+                                var t = new Date(a[each].time);
+                                if (facebook_name_key[myfriendlookup[each]] != null) {
+                                    var months = {
+                                        0: "January",
+                                        1: "Feburary",
+                                        2: "March",
+                                        3: "April",
+                                        4: "May",
+                                        5: "June",
+                                        6: "July",
+                                        7: "August",
+                                        8: "September",
+                                        9: "October",
+                                        10: "November",
+                                        11: "December"
+                                    };
+                                    $('#viewing_recent').append("<tr><td>" + facebook_name_key[myfriendlookup[each]] + "</td><td>" + t.getDate() + "\t" + months[t.getMonth()] + "</td></tr>");
+                                } else {
+                                    if (qwerty == 0) {
+                                        alert("We recommend connecting with facebook again to get new friends.");
+                                        qwerty++;
+                                    }
+                                }
+                            } catch (err) {
+                            }
+                        }
+                    });
+                    $('#modalsrs').modal('open');
+                }
+
+                function clearLocalStorage() {
+
+                    var conf = confirm("Are you sure you want to clear your data?");
+                    if (conf) {
+                        var classes = getdata.getproperty(uid, 'classes');
+
+                        for (var c in classes) {
+                            firebase.database().ref("/classes/" + c + "/users/" + uid).set(null);
+                        }
+                        localStorage.removeItem(uid + "classes");
+                        firebase.database().ref("/requests/" + uid).set(null);
+                        firebase.database().ref("/users/" + uid + "/classes").set(null);
+                        firebase.database().ref("/deleted/" + uid + "").set("A");
+                        location.reload();
+                    }
+
+                    //TODO improve this function a little bit for regular data cleansing.
+//                    localStorage.clear();
+                }
+
+                function setURLembed() {
+                    //
+
+                    $('#contactuspage').attr('src', "https://docs.google.com/forms/d/e/1FAIpQLSc0mTqbJ9LJPCO4zskNv4IJJVvtIbG83AxwZkgaQHnjMuA27w/viewform?embedded=true");
+                }
+            </script>
+
+
+            <!--TODO disable some links when not logged in-->
+            <li><a class="subheader">Actions</a></li>
+
+            <li><a onclick="clearLocalStorage()" href="#"><i class="material-icons">create</i>Clear Data</a></li>
+            <!--<li><a href="#"><i class="material-icons">settings</i>Preferences</a></li>-->
+            <li><a onclick="setURLembed()" href="#modalcontact"><i class="material-icons">drafts</i>Contact Us</a></li>
+
+            <li><a target="_blank" href="https://groups.google.com/forum/#!forum/unilyf-monash"><i
+                    class="material-icons">help</i>Help</a></li>
+            <li><a onclick="logoff()"><i class="material-icons">close</i>Log off</a></li>
+
+            <!--<li><a class="subheader">Get in touch</a></li>
+            <li>
+                <div class="fb-page" data-href="https://www.facebook.com/monashunilyf/" data-tabs="messages"
+                     data-height="400" data-small-header="true" data-adapt-container-width="true"
+                     data-hide-cover="true" data-show-facepile="true">
+                    <blockquote cite="https://www.facebook.com/monashunilyf/" class="fb-xfbml-parse-ignore"><a
+                            href="https://www.facebook.com/monashunilyf/">Monash UniLyf</a></blockquote>
+                </div>
+            </li>-->
+
+
+        </ul>
+
+
+        <div class="nav-wrapper">
+            <a href="../" class="brand-logo center">Unilyf Monash</a>
+            <ul class="show-on-med-and-down">
+                <li><a href="#" data-activates="slide-out" class="button-collapse"><i
+                        class="material-icons right">menu</i></a></li>
+            </ul>
+
+            <ul class="right ">
+                <li><a onclick="showPreviousViews()" href="#"><i class="material-icons">remove_red_eye</i></a></li>
+                <li><a onclick="showNotif()" href="#notifmodal"><i class="material-icons">notifications</i> </a></li>
+            </ul>
+
+        </div>
+
+    </nav>
+</header>
+
+
+<main>
+
+
+    <h4 id="importantmessage" style="display: none"></h4>
+    <h4 style="display: none" id="firebaseui-auth-container" class="center"><a href="../">Login</a></h4>
+
+
+    <p style="padding-left: 2%"><strong>The website best works when you <a style="cursor: hand" onclick="LoadFBUI()">connect
+        to
+        facebook. </a></strong> <br><span id="message_mobile"> Click on the class to see who is in it! </span></p>
+    <div class="row" id="logincomponents" style="visibility: hidden; padding-bottom: 70px;">
+        <div class="col s12 m12  l8 x">
+
+            <ul id="tabs-swipe-demo" class="tabs">
+                <li class="tab col l3 s4"><a class="active" href="#calendarview" id="calendarviewtab">Calendar View</a>
+                </li>
+
+                <li style="visibility: hidden" class="tab col l3 s4"><a href="#timetableupload" id="timetableuploadtab">Timetable
+                    Upload</a></li>
+            </ul>
+
+            <br>
+
+            <div class="col s12" id="calendarview">
+
+                <div class="col l12 s12 ">
+                    <div id='calendar'></div>
+
+                    `
+
+
+                    <ul id="currently_viewing_list" class="collection with-header">
+                        <li class="collection-header"><h5>Currently comparing</h5></li>
+                        <li id="tipthistime" class="collection-item" style="color: #ff8b00">
+                        </li>
+
+                    </ul>
+
+
+                </div>
+                <div class="col l12 s12 center">
+
+                    <!--TODO add calendar control here-->
+
+                </div>
+
+            </div>
+
+
+            <script>
+                //TODO too many document.ready, merge into one.
+                $(document).ready(function () {
+                    $('.collapsible').collapsible();
+                });
+
+                function showNotif() {
+
+                    var starCountRef = firebase.database().ref('users/' + uid + '/notifications/');
+                    starCountRef.once('value').then(function (snapshot) {
+                        var notifs = snapshot.val();
+
+                        console.log(notifs);
+                        for (var not in notifs) {
+                            console.log(not);
+                            if (notifs[not]['type'] == 'text') {
+                                //
+                                var t = notifs[not]['time'];
+                                var m = notifs[not]['message'];
+                                $("#tabnotifications").append("<tr><td>" + t + "</td><td>" + m + "</td></tr>");
+                            }
+                        }
+                    });
+
+
+                    $('#notifmodal').modal('open');
+
+                }
+            </script>
+
+
+            <div class="col s12 " id="timetableupload">
+
+                <!--TODO make sure this progress bar works-->
+                <!--<div class="progress">-->
+                <!--<div id="progressbarupload" class="determinate" style="width: 0%"></div>-->
+                <!--</div>-->
+
+                <script>
+                    function addfilelist() {
+                        var dropZone = document.getElementById('dropZone');
+
+                        dropZone.addEventListener('dragover', function (e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'copy';
+                        });
+
+                        function upload(file) {
+                            //TODO upload progress bar
+                            if (file.size < 2000000) {
+                                var storageRef = firebase.storage().ref();
+                                var mountainImagesRef = storageRef.child('usertimetable/' + uid);
+                                task = mountainImagesRef.put(file);
+                                task.on('state_changed', function (snapshot) {
+                                    var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+
+
+//                                    document.getElementById('progressbarupload').style.width = "" + progress + '%';
+
+                                    switch (snapshot.state) {
+                                        case firebase.storage.TaskState.PAUSED:
+                                            break;
+                                        case firebase.storage.TaskState.RUNNING:
+                                            break;
+                                    }
+                                }, function (error) {
+                                    alert("Couldn't upload \n " + error);
+                                }, function () {
+                                    firebase.database().ref('temp_requests/' + uid + "").set({status: "UPLOAD"});
+                                    firebase.database().ref('requests/' + uid + "").set({status: "UPLOAD"});
+                                });
+                            } else {
+                                alert("Too big...");
+                            }
+                        }
+
+                        var fileInput = document.getElementById('fileInput');
+                        fileInput.addEventListener('change', function (e) {
+                            var file = fileInput.files[0];
+                            upload(file);
+
+                        });
+
+                        // Get file data on drop
+                        dropZone.addEventListener('drop', function (e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            var files = e.dataTransfer.files; // Array of all files
+
+                            if (files.length == 1) {
+                                var file = files[0];
+                                if (file.size < 2000000) {
+                                    upload(file);
+                                } else {
+                                    alert("File too big, contact us.");
+                                }
+                            } else {
+                                alert("Select one file only");
+                            }
+                        });
+                    }
+
+                </script>
+
+
+                <h5 id="timetableuploadh5">We need your timetable!</h5>
+
+
+                <div id="dropZone" style="padding-bottom: 150px; border: solid 2px black" class="center col l12 s12 ">
+                    <ol style="text-align: left">
+                        <li>
+                            <p>Login in to Allocate+ and select the timetable tab.</p>
+                        </li>
+                        <li>
+                            <p>Download the timetable text file (Make sure you select all weeks!)</p>
+                        </li>
+                        <li>
+                            <p>Upload the file and you're on your way!</p>
+                        </li>
+                    </ol>
+                    <img class="materialboxed" width="100%" src="allocatehelp.png">
+
+                    <br><br><br><br><br>
+                    <input id="fileInput" class="center" size="60" style="opacity: 0.4;" type="file">
+                    <br><br><br><br>
+                    <p><strong>Or drag and drop betweeen the black border</strong></p>
+
+                </div>
+
+            </div>
+
+
+            <a href="#moreinfodialog"></a>
+
+            <div id="moreinfodialog" class="modal modal-fixed-footer">
+                <div class="modal-content">
+
+                    <h5>Activity Details</h5>
+                    <p id="eventdescription">Description</p>
+                    <p id="eventtime">Time</p>
+                    <div class="row">
+
+                        <div class="col s12 m12 l12 x12">
+
+                            <h5>Facebook Friends</h5>
+                            <ul id="class_fb_friends" style="overflow-y: auto; max-height: 450px;"
+                                class="collection with-header">
+                                <!--<li class="collection-item"></li>-->
+                                <!--<li class="collection-item">No facebook friends</li>-->
+                            </ul>
+
+                            <h6 class="center grey-text lighten-3" id="other_friends_counter"></h6>
+                            <!--<ul id="other_class_friends" class="collection with-header">-->
+
+                            <!--</ul>-->
+                        </div>
+
+                        <!--<div class="divider"></div>-->
+                        <div class="col s12 m12 l12 x12">
+                            <h6><strong>Swaps</strong></h6>
+                            <div class="input-field col s12">
+                                <select multiple id="dropdownofswapspossible">
+                                </select>
+
+
+                            </div>
+
+                            <a class="right" onclick="sendClassSwapPref()">Save preferences</a>
+
+                            <br><br>
+                            <h6><strong>Your current preferences</strong></h6>
+                            <table id="currprefslist"></table>
+                            <br><br>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <a href="#!" class="modal-action modal-close waves-effect btn-flat">Close</a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col s12 m12 l4 x4">
+            <br>
+
+
+            <div class="row">
+                <div class="col s12">
+                    <div class="row">
+                        <div class="input-field col s11">
+                            <i class="material-icons prefix">search</i>
+                            <input type="text" id="autocomplete-input-1" class="autocomplete">
+                            <label for="autocomplete-input-1">Search</label>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12">
+
+                    <div class="col valign-wrapper center s12">
+                        <div class="fb-send" data-href="https://learntog.github.io/"></div>
+
+                        <div class="fb-share-button" style="padding: 10px;"
+                             data-href="https://learntog.github.io/"
+                             data-layout="button_count" data-size="large" data-mobile-iframe="true"><a
+                                class="fb-xfbml-parse-ignore" target="_blank"
+                                href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Flearntog.github.io%2F&amp;src=sdkpreparse">Share</a>
+                        </div>
+
+                    </div>
+
+
+                    <ul id="listfacebookfriends" style=" overflow-y: auto; max-height: 550px;"
+                        class="collection with-header">
+                    </ul>
+
+                    <div class="center">
+                        <div class="fb-page" data-href="https://www.facebook.com/monashunilyf/" data-tabs="messages"
+                             data-height="400" data-small-header="true" data-adapt-container-width="true"
+                             data-hide-cover="true" data-show-facepile="true">
+                            <blockquote cite="https://www.facebook.com/monashunilyf/" class="fb-xfbml-parse-ignore"><a
+                                    href="https://www.facebook.com/monashunilyf/">Monash UniLyf</a></blockquote>
+                        </div>
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed-action-btn horizontal click-to-toggle">
+        <a class="btn-floating btn-large red">
+            <i class="material-icons">menu</i>
+        </a>
+        <ul>
+            <!--<li><a class="btn-floating red"><i class="material-icons">insert_chart</i></a></li>-->
+            <li><a onclick="window.print()" class="btn-floating green"><i class="material-icons">print</i></a></li>
+            <!--<li><a class="btn-floating green"><i class="material-icons">publish</i></a></li>-->
+            <!--<li><a class="btn-floating blue"><i class="material-icons">attach_file</i></a></li>-->
+        </ul>
+    </div>
+</main>
+
+
+<div id="modalsrs" class="modal">
+    <div class="modal-content">
+        <h4>Recently viewed</h4>
+        <table id="viewing_recent">
+
+        </table>
+
+    </div>
+
+</div>
+
+<div id="modalcontact" style="width: 90%;" class="modal">
+    <div class="modal-content">
+
+        <iframe id="contactuspage" src=""
+                width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Loading...
+        </iframe>
+
+
+    </div>
+
+</div>
+<div id="notifmodal" style="width: 90%;" class="modal">
+    <div class="modal-content">
+        <h4>Notifications</h4>
+        <table id="tabnotifications">
+
+        </table>
+    </div>
+
+</div>
+<script src="https://www.gstatic.com/firebasejs/4.1.1/firebase.js"></script>
+<script>
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyBLA6sDqXwnMX6tJayM4dmYCPRzt5CW91M",
+        authDomain: "learntogether-a250b.firebaseapp.com",
+        databaseURL: "https://learntogether-a250b.firebaseio.com",
+        projectId: "learntogether-a250b",
+        storageBucket: "learntogether-a250b.appspot.com",
+        messagingSenderId: "3175571907"
+    };
+    firebase.initializeApp(config);
+</script>
+
+</body>
+</html>

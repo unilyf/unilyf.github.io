@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ADMIN PANEL</title>
+
+    <script src="https://www.gstatic.com/firebasejs/4.1.1/firebase.js"></script>
+    <script>
+
+        gd = {
+            there: function (prop) {
+                return localStorage.getItem(prop)!=null;
+            },
+            s: function (prop, val) {
+                localStorage.setItem(prop, JSON.stringify(val));
+            },
+            g: function (prop) {
+                return (JSON.parse(localStorage.getItem(prop)));
+            }
+
+        };
+
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyBLA6sDqXwnMX6tJayM4dmYCPRzt5CW91M",
+            authDomain: "learntogether-a250b.firebaseapp.com",
+            databaseURL: "https://learntogether-a250b.firebaseio.com",
+            projectId: "learntogether-a250b",
+            storageBucket: "learntogether-a250b.appspot.com",
+            messagingSenderId: "3175571907"
+        };
+        firebase.initializeApp(config);
+    </script>
+
+
+    <script>
+
+
+        function a(x,val){
+            ct = document.getElementById("ct");
+            ct.innerHTML = ct.innerHTML + val;
+        }
+
+        function TryLogin(){
+            var email = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            console.log(email, password);
+            firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+
+                alert(errorCode+"\n"+errorMessage);
+                console.log(errorCode, errorMessage);
+                // ...
+            });
+        }
+
+        userg = "";
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                userg = user;
+                console.log("Logged in..");
+
+                var s = firebase.database().ref('requests/');
+                s.once('value').then(function (snapshot) {
+                    var all = snapshot.val();
+                    var count = snapshot.numChildren();
+
+                    document.getElementById("infotable").innerHTML = (document.getElementById("infotable").innerHTML +
+                            "<tr><td>Count of requests</td><td>"+count+"</td></tr>");
+
+                });
+
+                var s = firebase.database().ref('/id_to_name');
+                s.once('value').then(function (snapshot) {
+                    var all = snapshot.val();
+                    var count = snapshot.numChildren();
+
+                    document.getElementById("infotable").innerHTML = (document.getElementById("infotable").innerHTML +
+                    "<tr><td>Amount of user accounts</td><td>"+count+"</td></tr>");
+
+                    for (var x in all){
+                        document.getElementById("usertable").innerHTML = (document.getElementById("usertable").innerHTML +
+                        "<tr><td>"+all[x]+"</td><td>"+x+"</td></tr>");
+                    }
+
+                });
+
+                var s = firebase.database().ref('/facebook_to_id');
+                s.once('value').then(function (snapshot) {
+                    var all = snapshot.val();
+                    var count = snapshot.numChildren();
+
+                    document.getElementById("infotable").innerHTML = (document.getElementById("infotable").innerHTML +
+                    "<tr><td>Facebook accounts linked.</td><td>"+count+"</td></tr>");
+
+                });
+                // ...
+            } else {
+                console.log("Logged out.");
+                alert("Logged out<br>");
+                // User is signed out.
+                // ...
+            }
+        });
+    </script>
+</head>
+<body>
+
+
+<input type="text" id="username">
+<input type="password" id="password">
+<button onclick="TryLogin()">__________</button>
+<br>
+<button onclick="firebase.auth().signOut()">*******</button>
+
+<p id="ct">___</p>
+
+<table id="infotable">
+
+</table>
+
+<br><br>
+
+<table style="height: 400px; overflow-y: auto" id="usertable">
+
+</table>
+
+</body>
+</html>
