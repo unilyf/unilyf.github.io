@@ -277,6 +277,8 @@
     <script>
         function drawFriendOnCalendar(fuid) {
             toggleload();
+
+            ga('send', 'event', 'Views', 'Viewsomeone', 'Campaign');
             //TODO add read permission denied, val not found check. Pass on null to drawfunction.
             //TODO store the facebook friend -> uid locally.
             if(locallstoredsessionclasses[fuid]==null) {
@@ -546,6 +548,35 @@
 
         }
 
+        function getHumanAddress(a){
+            var claytonStreetNames = {
+                All: "Alliance Lane",
+                Anc: "Ancora Imparo Way",
+                Chn: "Chancellors Walk",
+                Col: "College Walk",
+                Exh: "Exhibition Walk",
+                FGR: "Ferntree Gully Road",
+                Inn: "Innovation Walk",
+                Rnf: "Rainforest Walk",
+                Res: "Research Way",
+                Sce: "Scenic Boulevard"
+            };
+
+            //CL_15Rnf-S5
+            try{
+            if(a.indexOf("CL_")==0){
+                var x = a.split("_");
+                var s = x[1].split("-")[0];
+                var q = s.replace(/[0-9]/g,"");
+
+                if(claytonStreetNames[q]!=null){
+                    return x[1].split("-")[1] + " " + s.replace(q, " "+claytonStreetNames[q]);
+                }
+            }}catch(er){
+                return a;
+            }
+            return a;
+        }
         $(document).ready(function () {
             $('.button-collapse').sideNav({
                         menuWidth: 230,
@@ -599,7 +630,8 @@
                             dayindextoday = {1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday"};
                             //////console.log(d + "\t" + d.getDay());
                             document.getElementById('eventtime').innerHTML = dayindextoday[d.getDay()] + "\t" + ("00" + d.getHours().toString()).slice(-2) + ":" + ("00" + d.getMinutes().toString()).slice(-2);
-
+                            document.getElementById("eventaddress").innerHTML = getHumanAddress(a[4]);
+                            //dudecomehere
                             currentevent = event;
                             showInfoModal(currentevent);
                         }
@@ -835,7 +867,7 @@
         fbfriendsnametoid = {};
         if (response != null) {
             //TODO show logout facebook button.
-            $("#listfacebookfriends").html("<li class=\"collection-header\"><a><h6 onclick=\"LoadFBUI()\">Facebook Friends<i class=\"material-icons\">refresh</i></h6></a></li>");
+            $("#listfacebookfriends").html("<li class=\"collection-header\"><a><h6 onclick=\"LoadFBUI()\">Facebook Friends ("+response.length+") <i class=\"material-icons\">refresh</i></h6></a></li>");
 //                    "<li class='collection-item'> <div class='fb-share-button' style='padding: 10px;' data-href='https://learntog.github.io/' " +
 //                    "data-layout='button_count' data-size='large' data-mobile-iframe='true'>" +
 //                    "<a class='fb-xfbml-parse-ignore' target='_blank' " +
@@ -1148,6 +1180,7 @@
                     if (conf) {
                         var classes = getdata.getproperty(uid, 'classes');
 
+                        clearLink();
                         for (var c in classes) {
                             firebase.database().ref("/classes/" + c + "/users/" + uid).set(null);
                         }
@@ -1210,6 +1243,7 @@
 
         <div class="nav-wrapper">
             <a href="../" class="brand-logo center">Unilyf Monash</a>
+
             <ul class="show-on-med-and-down">
                 <li><a href="#" data-activates="slide-out" class="button-collapse"><i
                         class="material-icons right">menu</i></a></li>
@@ -1241,7 +1275,7 @@
     <div class="row" id="logincomponents" style="visibility: hidden; padding-bottom: 70px;">
         <div class="col s12 m12  l8 x">
 
-            <ul id="tabs-swipe-demo" class="tabs">
+            <ul style="display: none" id="tabs-swipe-demo" class="tabs">
                 <li class="tab col l3 s4"><a class="active" href="#calendarview" id="calendarviewtab">Calendar View</a>
                 </li>
 
@@ -1254,20 +1288,8 @@
             <div class="col s12" id="calendarview">
 
                 <div class="col l12 s12 ">
-                    <p>You'll soon be able to take notes with your classmates :)</p><br>
+                    <p style="font-size: 1.5em;">Confused in classes? You can team up with peers to take notes. Click on a class to get started.</p>
                     <div id='calendar'></div>
-
-                    `<ul class="collection with-header">
-                    <li class="collection-header" style="color: gray;"><h5>Find it hard to view timetable during uni?</h5>
-
-                        <a href='https://play.google.com/store/apps/details?id=io.github.learntog.unilyfmonash&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' style="width: 35%" src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'/></a>
-
-                    </li>
-
-
-
-                </ul>
-
 
                     <ul id="currently_viewing_list" class="collection with-header">
                         <li class="collection-header"><h5>Currently comparing</h5></li>
@@ -1275,11 +1297,6 @@
                         </li>
 
                     </ul>
-
-
-
-
-
 
                 </div>
 
@@ -1479,6 +1496,7 @@
                     <h5>Activity Details</h5>
                     <p id="eventdescription">Description</p>
                     <p id="eventtime">Time</p>
+                    <p id="eventaddress">Address</p>
                     <div class="row">
 
                         <a id="gdriveLink" href="#" target="_blank">Link to GDrive</a>
@@ -1563,6 +1581,9 @@
                                     class="fb-xfbml-parse-ignore" target="_blank"
                                     href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Flearntog.github.io%2F&amp;src=sdkpreparse">Share</a>
                             </div>
+                            <br>
+                            <a href='https://play.google.com/store/apps/details?id=io.github.learntog.unilyfmonash&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' style="width: 150px" src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'/></a>
+
 
                         </div>
 
@@ -1570,6 +1591,22 @@
                         <ul id="listfacebookfriends" style=" overflow-y: auto; max-height: 550px;"
                             class="collection with-header">
                         </ul>
+                        <ul class="collection with-header">
+
+                            <li class="center l6 m6 s12">
+                                <a href="https://play.google.com/store/apps/details?id=io.github.learntog.unilyfmonash">
+                                    <h4>Get the Android App</h4>
+                                    <img  style="width: 180px; height: 320px" src="../img/one.png">
+                                </a>
+                            </li>
+                            <li class="center l6 m6 s12">
+                                <a href="https://play.google.com/store/apps/details?id=io.github.learntog.unilyfmonash">
+
+                                    <img  style="width: 180px; height: 320px" src="../img/two.png">
+                                </a>
+                            </li>
+                        </ul>
+
 
                         <div class="center">
                             <div class="fb-page" data-href="https://www.facebook.com/monashunilyf/" data-tabs="messages"
@@ -1597,6 +1634,16 @@
             </div>
         </div>
 
+        <!--<div class="s12 m8 offset-m2 l4 offset-l4 ">
+            <ul class="collection with-header">
+                <li class="collection-header center" style="color: gray;"><h5>Find it hard to view timetable during uni?</h5>
+
+                    <a href='https://play.google.com/store/apps/details?id=io.github.learntog.unilyfmonash&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' style="width: 30%" src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'/></a>
+
+                    <br><br><img src="../img/app.png" style="width: 40%">
+                </li>
+            </ul>
+        </div>-->
     </div>
 
     <div class="fixed-action-btn horizontal  ">
