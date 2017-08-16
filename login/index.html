@@ -853,7 +853,7 @@
         }
         //console.log(getdata.getproperty(uid, 'showfb'));
         if ((getdata.getproperty(uid, 'showfb') % 5 == 0 || getdata.getproperty(uid, 'showfb') == 0 || getdata.getproperty(uid, 'showfb') == 2) && getdata.getproperty(uid, 'showfb') < 30) {
-            alert("Please connect to facebook for an enhanced expereince.");
+//            alert("Please connect to facebook for an enhanced expereince.");
         }
         getdata.setproperty(uid, getdata.getproperty(uid, 'showfb')+1, 'showfb');
 
@@ -1162,7 +1162,7 @@
                                     $('#viewing_recent').append("<tr><td>" + facebook_name_key[myfriendlookup[each]] + "</td><td>" + t.getDate() + "\t" + months[t.getMonth()] + "</td></tr>");
                                 } else {
                                     if (qwerty == 0) {
-                                        alert("We recommend connecting with facebook again to get new friends.");
+//                                        alert("We recommend connecting with facebook again to get new friends.");
                                         qwerty++;
                                     }
                                 }
