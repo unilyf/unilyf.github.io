@@ -70,6 +70,16 @@
                     document.getElementById("infotable").innerHTML = (document.getElementById("infotable").innerHTML +
                             "<tr><td>Count of requests</td><td>"+count+"</td></tr>");
 
+
+                    var ce = 0;
+                    for(var g in all) {
+                        if(all[g]['status']!='SUCCESS') {
+                            ce+=1;
+
+                        }
+                    }
+                    document.getElementById("infotable").innerHTML = (document.getElementById("infotable").innerHTML +
+                    "<tr><td>"+"Errors in processing"+"</td><td>" + ce + "</td></tr>");
                 });
 
                 var s = firebase.database().ref('/id_to_name');
