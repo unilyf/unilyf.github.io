@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compass</title>
+</head>
+<body>
+
+<script>
+
+    function deviceOrientationListener(event) {
+        if(event.alpha == null){
+            document.getElementById("heading").innerHTML = "Unsupported. It's null";
+        }else {
+            document.getElementById("heading").innerHTML = "Hey";
+            console.log(event.alpha);
+        }
+    }
+    if (window.DeviceOrientationEvent) {
+        // Our browser supports DeviceOrientation
+        window.addEventListener("deviceorientation", deviceOrientationListener);
+    } else {
+        console.log("Sorry, your browser doesn't support Device Orientation");
+        document.getElementById("heading").innerHTML = "Unsupported due to browser.";
+    }
+</script>
+
+<p id="heading">____</p>
+</body>
+</html>
