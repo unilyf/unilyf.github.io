@@ -75,12 +75,19 @@ div.header h1 {
     font-size: 1.9em;
     letter-spacing: 0.2rem;
   }
+  div.header h2 {
+    font-size: 1.1em;
+    font-weight: 400;
+    color: #cfd7de;
+    max-width: 100%;
+    margin: auto;
+  }
 }
 div.header h2 {
   font-size: 1.1em;
   font-weight: 400;
   color: #cfd7de;
-  max-width: 80%;
+  max-width: 100%;
   margin: auto;
 }
 
