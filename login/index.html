@@ -172,7 +172,7 @@
                 loading.style.display = "block";
 //                document.getElementById("calendarviewtab").style.display = "none";
 //                document.getElementById("listviewtab").style.display = "none";
-                addfilelist();
+//                addfilelist();
 //                $('ul.tabs').tabs('select_tab', 'timetableupload');
             }
         }
@@ -217,6 +217,7 @@
                     $("#tipthistime").html("<strong>Tip: </strong>" + listoftips[ri]);
 
                     ShowFbFriend();
+                    addfilelist();
                     myfriends = getdata.getproperty(uid, 'friends');
                     var message = document.getElementById('importantmessage');
                     var alllogin = document.getElementById('logincomponents');
