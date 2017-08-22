@@ -228,7 +228,8 @@
                                 ShowSomething(document.getElementById("logincomponents"));
                                 document.getElementById('message_mobile').innerHTML = "You can also upload your timetable from Allocate+!";
                                 $("#message_mobile").toggleClass('orange-text');
-                                drawoncalendar(null, "my");
+                                drawNoTimetable();
+//                                drawoncalendar(null, "my");
                             } else if (a != null && a.indexOf("ERR") != -1) {
                                 ShowSomething(document.getElementById("logincomponents"));
                                 ShowSomething(message);
@@ -285,6 +286,28 @@
         });
     </script>
     <script>
+
+        function drawNoTimetable(){
+            toggleload();
+            var starCountRef = firebase.database().ref('users/' + uid + '/classes/');
+            starCountRef.once('value').then(function (snapshot) {
+                var friend_tt = snapshot.val();
+                friend_tt = convertToList(friend_tt);
+
+                if (friend_tt != null || friend_tt.length <= 0) {
+
+                    console.log(friend_tt);
+                    drawoncalendar(friend_tt, "myself");
+
+                } else {
+                    //USER HASN"T DONE ANYTHING
+//                    alert("Friend hasn't uploaded timetable. ");
+                }
+                toggleload();
+
+            });
+        }
+
         function drawFriendOnCalendar(fuid) {
             toggleload();
 
@@ -634,18 +657,40 @@
                     selectHelper: true,
                     select: function(start, end) {
 //                        var title = prompt('Event Title:');
-                        var title = "Class time.\nClick to delete.";
-                        var eventData;
-                        if (title) {
-                            eventData = {
-                                title: title,
-                                start: start,
-                                end: end,
-                                color: getRandomColor(),
-                                way: "MANUAL"
-                            };
-                            $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
-                        }
+//                        ACF3200*Lecture01*Wed*11:30*CA_K-K309*1~5*S2!!2017
+//"**Monday*9:0**2*S2!!2017"
+
+                        var days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri"};
+                        var day = days[start.day()];
+                        console.log(start);
+
+                        var duration = moment.duration(end.diff(start));
+                        duration = duration.asHours();
+                        duration = "" + duration;
+                        duration = duration.replace(".", "~");
+                        console.log(duration);
+
+
+
+                        var unitstring = "**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
+                        drawoncalendar([unitstring], "myself");
+
+                        var end_date = start.date() + "/" + start.month() + "-21/10";
+                        firebase.database().ref('users/' + uid + "/classes/" + unitstring).set(end_date);
+
+//                        firebase.database.ref("/users/cla")
+//                        var title = "I'll be busy.\nClick to delete.";
+//                        var eventData;
+//                        if (title) {
+//                            eventData = {
+//                                title: title,
+//                                start: start,
+//                                end: end,
+//                                color: getRandomColor(),
+//                                way: "MANUAL"
+//                            };
+//                            $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+//                        }
                         $('#calendar').fullCalendar('unselect');
                     },
 //                    editable: true,
@@ -674,6 +719,7 @@
                     allDaySlot: false,
                     displayEventTime: true,
                     eventClick: function (event) {
+                        console.log(event);
 
                         if (event.e == "---") {
 
@@ -688,7 +734,31 @@
                             //dudecomehere
                             currentevent = event;
                             showInfoModal(currentevent);
-                        } else if(event.way == "MANUAL"){
+                        } else if(event.e == "myself"){
+                            var start = event.start;
+                            var end = event.end;
+
+                            var days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri"};
+                            var day = days[start.day()];
+
+
+                            var five_min = moment.duration("00:05:00");
+                            start = start.subtract(five_min);
+//                            console.log(end);
+
+                            var duration = moment.duration(end.diff(start));
+                            duration = duration.asHours();
+                            duration = "" + duration;
+                            duration = duration.replace(".", "~");
+                            console.log(duration);
+
+
+
+                            var unitstring = "**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
+//                            alert(unitstring);
+                            firebase.database().ref('users/' + uid + "/classes/" + unitstring).set(null);
+
+
                             $("#calendar").fullCalendar('removeEvents', event._id);
                         }
 
@@ -727,6 +797,7 @@
                 }
 
                 newEvent.start = new Date(new Date(start).getTime() + (5 * 60000));
+
 
                 duration = duration.replace("~", ".");
                 newEvent.end = new Date(start.getTime() + (duration * 60 * 60 * 1000));
@@ -1181,6 +1252,7 @@
     <nav class="blue">
 
         <ul id="slide-out" class="grey lighten-3 side-nav fixed">
+
             <li>
                 <div class="userView">
 
@@ -1288,6 +1360,14 @@
             <li><a target="_blank" href="https://groups.google.com/forum/#!forum/unilyf-monash"><i
                     class="material-icons">help</i>Help</a></li>
             <li><a onclick="logoff()"><i class="material-icons">close</i>Log off</a></li>
+            <li>
+                <div class="row" style="padding: 0px">
+                    <div class="col s12 center  pink-text">
+                        <p>In Beta Phase</p>
+                    </div>
+                </div>
+            </li>
+
 
             <!--<li><a class="subheader">Get in touch</a></li>
             <li>
@@ -1325,11 +1405,7 @@
 <main>
 
 
-    <div class="row" style="padding: 0px">
-        <div class="col s12 center pink white-text">
-            <p>In Beta Phase</p>
-        </div>
-    </div>
+
 
     <h4 id="importantmessage" style="display: none"></h4>
     <h4 style="display: none" id="firebaseui-auth-container" class="center"><a href="../">Login</a></h4>
@@ -1356,7 +1432,7 @@
             <div class="col s12" id="calendarview">
 
                 <div class="col l12 s12 ">
-                    <h6 id="" style="margin-bottom: 2%;" class="blue-text">Select time that is occupied by classes by dragging on the calendar.</h6>
+                    <h6 id="" style="margin-bottom: 2%;" class="blue-text">Select time that is occupied by classes by dragging or long pressing on the calendar.</h6>
                     <!--<p style="font-size: 1.5em;">Confused in classes? You can team up with peers to take notes. Click on a class to get started.</p>-->
                     <div id='calendar'></div>
 
