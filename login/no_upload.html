@@ -225,7 +225,7 @@
                                 ShowSomething(document.getElementById("logincomponents"));
                                 document.getElementById('message_mobile').innerHTML = "You can also upload your timetable from Allocate+!";
                                 $("#message_mobile").toggleClass('orange-text');
-                                drawoncalendar([], "my");
+                                drawoncalendar(null, "my");
                             } else if (a != null && a.indexOf("ERR") != -1) {
                                 ShowSomething(document.getElementById("logincomponents"));
                                 ShowSomething(message);
@@ -629,7 +629,7 @@
                     selectHelper: true,
                     select: function(start, end) {
 //                        var title = prompt('Event Title:');
-                        var title = "Yolo";
+                        var title = "Class time.\nClick to delete.";
                         var eventData;
                         if (title) {
                             eventData = {
@@ -1348,7 +1348,8 @@
             <div class="col s12" id="calendarview">
 
                 <div class="col l12 s12 ">
-                    <p style="font-size: 1.5em;">Confused in classes? You can team up with peers to take notes. Click on a class to get started.</p>
+                    <h6 id="" style="margin-bottom: 2%;" class="blue-text">Select time that is occupied by classes by dragging on the calendar.</h6>
+                    <!--<p style="font-size: 1.5em;">Confused in classes? You can team up with peers to take notes. Click on a class to get started.</p>-->
                     <div id='calendar'></div>
 
                     <ul id="currently_viewing_list" class="collection with-header">
