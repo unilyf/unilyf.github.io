@@ -23,14 +23,17 @@
     <meta property="og:image:secure_url" content="https://learntog.github.io/img/uniicon.png"/>
     <!--TODO add the og:image parameter-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/css/materialize.min.css">
-    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.6.0/fullcalendar.css'/>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.9.0/fullcalendar.min.css'/>
+    <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.print.css"/>-->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script
             src="https://code.jquery.com/jquery-3.2.1.min.js"
             integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
             crossorigin="anonymous"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>-->
+    <!--<script src="jquery.ui.touch-punch.min.js"></script>-->
     <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.1/moment.min.js'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.6.0/fullcalendar.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.9.0/fullcalendar.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/js/materialize.min.js"></script>
     <script src="../js/analytics.js"></script>
     <script src="../js/makecal.js"></script>
@@ -120,6 +123,7 @@
             if (timetablesur != null && timetablesur.length > 0) {
                 unitcolor = {};
                 //TODO check length 0 here to uncheck/provide message that other person timetable doesn't have current
+                console.log(whose, timetablesur);
                 for (i = 0; i < timetablesur.length; i++) {
                     var cl = timetablesur[i];
                     var cld = cl.split("*");
@@ -138,6 +142,9 @@
                         if (unitcolor['friendstatic'] == null) {
                             unitcolor['friendstatic'] = getRandomColor();
                         }
+
+                        console.log(timetablesur[i]);
+
                         if (whose == "my") {
                             ////////////////console.log(unit, unitcolor);
                             if (unitcolor[unit] == null) {
@@ -162,10 +169,10 @@
             } else {
                 loading = document.getElementById("timetableuploadtab");
                 loading.style.visibility = "visible";
-                document.getElementById("calendarviewtab").style.display = "none";
+//                document.getElementById("calendarviewtab").style.display = "none";
 //                document.getElementById("listviewtab").style.display = "none";
                 addfilelist();
-                $('ul.tabs').tabs('select_tab', 'timetableupload');
+//                $('ul.tabs').tabs('select_tab', 'timetableupload');
             }
         }
         function WriteText(message, data) {
@@ -200,6 +207,8 @@
                         //alert to connect to facebook.
                     }
 
+                    havetimetable = false;
+
                     var listoftips = ['Click on a class to view details.', 'Click the eye in the top right corner to see who\'s seen your timetable'
                         , 'Click button in bottom right corner for options with your calendar.', 'Message us on facebook for a quick reply.'];
 
@@ -217,9 +226,10 @@
                             console.log(a);
                             if (a == null) { //upload,download,success,error
                                 ShowSomething(document.getElementById("logincomponents"));
-                                document.getElementById('message_mobile').innerHTML = "Allocate+ only allows downloading timetable on desktop devices. <br> Use a computer to upload your timetable.";
+                                document.getElementById('message_mobile').innerHTML = "You can also upload your timetable from Allocate+!";
                                 $("#message_mobile").toggleClass('orange-text');
-                                drawoncalendar(null, "my");
+                                drawNoTimetable();
+//                                drawoncalendar(null, "my");
                             } else if (a != null && a.indexOf("ERR") != -1) {
                                 ShowSomething(document.getElementById("logincomponents"));
                                 ShowSomething(message);
@@ -233,14 +243,14 @@
                             }
                             else if (a == "UPLOAD") {
                                 alert("Uploaded successfully");
-                                HideSomething(alllogin);
+//                                HideSomething(alllogin);
                                 ShowSomething(message);
                                 WriteText(message, "We'll be back in the time it takes to make instant noodles.");
                                 //TODO add hiding all tabs code
                             }
                             else if (a == "DOWNLOADED") {
                                 alert("Your file is currently being proccessed!");
-                                HideSomething(alllogin);
+//                                HideSomething(alllogin);
                                 ShowSomething(message);
                                 WriteText(message, "Your file is being processed right now, hang tight...");
                             }
@@ -249,6 +259,7 @@
                             }
                         });
                     } else {
+                        havetimetable = true;
                         ShowSomething(alllogin);
                         ShowSomething(document.getElementById('calendar'));
                         HideSomething(message);
@@ -275,6 +286,28 @@
         });
     </script>
     <script>
+
+        function drawNoTimetable(){
+            toggleload();
+            var starCountRef = firebase.database().ref('users/' + uid + '/classes/');
+            starCountRef.once('value').then(function (snapshot) {
+                var friend_tt = snapshot.val();
+                friend_tt = convertToList(friend_tt);
+
+                if (friend_tt != null || friend_tt.length <= 0) {
+
+                    console.log(friend_tt);
+                    drawoncalendar(friend_tt, "myself");
+
+                } else {
+                    //USER HASN"T DONE ANYTHING
+//                    alert("Friend hasn't uploaded timetable. ");
+                }
+                toggleload();
+
+            });
+        }
+
         function drawFriendOnCalendar(fuid) {
             toggleload();
 
@@ -309,6 +342,7 @@
                                             firebase.database().ref('/users/' + uid + "/viewLimit").set(va - 1);
 
 
+                                        console.log(friend_tt);
                                         drawoncalendar(friend_tt, fuid);
                                     } else {
                                         alert("Friend hasn't uploaded timetable. ");
@@ -564,15 +598,15 @@
 
             //CL_15Rnf-S5
             try{
-            if(a.indexOf("CL_")==0){
-                var x = a.split("_");
-                var s = x[1].split("-")[0];
-                var q = s.replace(/[0-9]/g,"");
+                if(a.indexOf("CL_")==0){
+                    var x = a.split("_");
+                    var s = x[1].split("-")[0];
+                    var q = s.replace(/[0-9]/g,"");
 
-                if(claytonStreetNames[q]!=null){
-                    return x[1].split("-")[1] + " " + s.replace(q, " "+claytonStreetNames[q]);
-                }
-            }}catch(er){
+                    if(claytonStreetNames[q]!=null){
+                        return x[1].split("-")[1] + " " + s.replace(q, " "+claytonStreetNames[q]);
+                    }
+                }}catch(er){
                 return a;
             }
             return a;
@@ -614,12 +648,78 @@
                     header: false,
                     minTime: '08:00:00',
                     maxTime: '21:00:00',
-                    columnFormat: {
-                        week: 'ddd'
+                    columnFormat: 'ddd',
+
+
+
+
+                    selectable: true,
+                    selectHelper: true,
+                    select: function(start, end) {
+//                        var title = prompt('Event Title:');
+//                        ACF3200*Lecture01*Wed*11:30*CA_K-K309*1~5*S2!!2017
+//"**Monday*9:0**2*S2!!2017"
+
+                        var days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri"};
+                        var day = days[start.day()];
+                        console.log(start);
+
+                        var duration = moment.duration(end.diff(start));
+                        duration = duration.asHours();
+                        duration = "" + duration;
+                        duration = duration.replace(".", "~");
+                        console.log(duration);
+
+
+
+                        var unitstring = "**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
+                        drawoncalendar([unitstring], "myself");
+
+                        var end_date = start.date() + "/" + start.month() + "-21/10";
+                        firebase.database().ref('users/' + uid + "/classes/" + unitstring).set(end_date);
+
+//                        firebase.database.ref("/users/cla")
+//                        var title = "I'll be busy.\nClick to delete.";
+//                        var eventData;
+//                        if (title) {
+//                            eventData = {
+//                                title: title,
+//                                start: start,
+//                                end: end,
+//                                color: getRandomColor(),
+//                                way: "MANUAL"
+//                            };
+//                            $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+//                        }
+                        $('#calendar').fullCalendar('unselect');
                     },
+//                    editable: true,
+
+//                    selectable: true,
+//                    selectHelper: true,
+//                    select: function(start, end) {
+//                        var title = "Heyoworld";
+//                        var eventData;
+//                        if (true) {
+//                            eventData = {
+//                                title: title,
+//                                start: start,
+//                                end: end,
+//                                color: "red"
+//                            };
+//                            console.log(eventData);
+//                            console.log(start._d, end._d);
+//
+//                            $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+//                        }
+//
+//                    },
+
+
                     allDaySlot: false,
                     displayEventTime: true,
                     eventClick: function (event) {
+                        console.log(event);
 
                         if (event.e == "---") {
 
@@ -634,14 +734,44 @@
                             //dudecomehere
                             currentevent = event;
                             showInfoModal(currentevent);
+                        } else if(event.e == "myself"){
+                            var start = event.start;
+                            var end = event.end;
+
+                            var days = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri"};
+                            var day = days[start.day()];
+
+
+                            var five_min = moment.duration("00:05:00");
+                            start = start.subtract(five_min);
+//                            console.log(end);
+
+                            var duration = moment.duration(end.diff(start));
+                            duration = duration.asHours();
+                            duration = "" + duration;
+                            duration = duration.replace(".", "~");
+                            console.log(duration);
+
+
+
+                            var unitstring = "**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
+//                            alert(unitstring);
+                            firebase.database().ref('users/' + uid + "/classes/" + unitstring).set(null);
+
+
+                            $("#calendar").fullCalendar('removeEvents', event._id);
                         }
 
                     }
                 });
             } catch (err) {
+                console.log(err);
             }
 
         });
+
+
+
 
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -651,20 +781,23 @@
             try {
                 newEvent = {};
 
+                console.log(havetimetable);
                 ////console.log(e);
                 //console.log(data.toString(), elementinLinear(timetablesur, ""+data.trim()));
                 if (e == "---") {
                     newEvent.title = title;
                     newEvent.description = "";
-                } else if(e!="---" && (elementinLinear(timetablesur, ""+data.trim()))) {
-                    newEvent.title = title;
-                    newEvent.description = "";
-                }else{
+                } else if(havetimetable){
+                    if(e!="---" && (elementinLinear(timetablesur==null?[]:timetablesur, ""+data.trim()))) {
+                        newEvent.title = title;
+                        newEvent.description = "";
+                    }}else{
                     newEvent.title = "";
                     newEvent.description = "";
                 }
 
                 newEvent.start = new Date(new Date(start).getTime() + (5 * 60000));
+
 
                 duration = duration.replace("~", ".");
                 newEvent.end = new Date(start.getTime() + (duration * 60 * 60 * 1000));
@@ -675,7 +808,7 @@
 
                 $('#calendar').fullCalendar('renderEvent', newEvent, 'stick');
             } catch (err) {
-
+                console.log(err);
             }
         }
 
@@ -1119,6 +1252,7 @@
     <nav class="blue">
 
         <ul id="slide-out" class="grey lighten-3 side-nav fixed">
+
             <li>
                 <div class="userView">
 
@@ -1209,8 +1343,8 @@
                 function syncfromdb() {
 //                    getdata.setproperty(uid,"classes", null);
                     localStorage.removeItem(uid+"classes");
-                        console.log(localStorage);
-                     location.reload();
+                    console.log(localStorage);
+                    location.reload();
                 }
             </script>
 
@@ -1226,6 +1360,14 @@
             <li><a target="_blank" href="https://groups.google.com/forum/#!forum/unilyf-monash"><i
                     class="material-icons">help</i>Help</a></li>
             <li><a onclick="logoff()"><i class="material-icons">close</i>Log off</a></li>
+            <li>
+                <div class="row" style="padding: 0px">
+                    <div class="col s12 center  pink-text">
+                        <p>In Beta Phase</p>
+                    </div>
+                </div>
+            </li>
+
 
             <!--<li><a class="subheader">Get in touch</a></li>
             <li>
@@ -1251,7 +1393,7 @@
 
             <ul class="right ">
                 <li><a onclick="showPreviousViews()" href="#"><i class="material-icons">remove_red_eye</i></a></li>
-                <li><a onclick="showNotif()" href="#notifmodal"><i class="material-icons">notifications</i> </a></li>
+                <!--<li><a onclick="showNotif()" href="#notifmodal"><i class="material-icons">notifications</i> </a></li>-->
             </ul>
 
         </div>
@@ -1263,11 +1405,7 @@
 <main>
 
 
-    <div class="row" style="padding: 0px">
-        <div class="col s12 center pink white-text">
-            <p>In Beta Phase</p>
-        </div>
-    </div>
+
 
     <h4 id="importantmessage" style="display: none"></h4>
     <h4 style="display: none" id="firebaseui-auth-container" class="center"><a href="../">Login</a></h4>
@@ -1281,7 +1419,7 @@
     <div class="row" id="logincomponents" style="visibility: hidden; padding-bottom: 70px;">
         <div class="col s12 m12  l8 x">
 
-            <ul style="display: none" id="tabs-swipe-demo" class="tabs">
+            <ul style="" id="tabs-swipe-demo" class="tabs">
                 <li class="tab col l3 s4"><a class="active" href="#calendarview" id="calendarviewtab">Calendar View</a>
                 </li>
 
@@ -1294,7 +1432,8 @@
             <div class="col s12" id="calendarview">
 
                 <div class="col l12 s12 ">
-                    <p style="font-size: 1.5em;">Confused in classes? You can team up with peers to take notes. Click on a class to get started.</p>
+                    <h6 id="" style="margin-bottom: 2%;" class="blue-text">Select time that is occupied by classes by dragging or long pressing on the calendar.</h6>
+                    <!--<p style="font-size: 1.5em;">Confused in classes? You can team up with peers to take notes. Click on a class to get started.</p>-->
                     <div id='calendar'></div>
 
                     <ul id="currently_viewing_list" class="collection with-header">
@@ -1466,7 +1605,7 @@
 
 
                 <!--<h2 style="padding-left: 3%; color: red">The website is under maintainance. You can still upload files but processing them will take a little longer. Stay tuned...</h2>-->
-                <h5 id="timetableuploadh5">We need your timetable!</h5>
+                <h6 id="timetableuploadh5">Allocate+ only allows downloading timetable on desktop devices. <br> Use a computer to upload your timetable.</h6>
 
 
 
