@@ -1029,10 +1029,10 @@
 
                     //TODO add a checkbox event change listner to show/hide.
                     $("#listfacebookfriends").append("<li  class='collection-item' style='padding-left: 2px'>" +
-                            "<div class='row'style='margin-bottom: 0px'> <div class=\"col s9\"> " +
+                            "<div class='row'style='margin-bottom: 0px'> <div class=\"col s10\"> " +
                             "<input type=\"checkbox\" name='selectedfbfriends' value='" + response[i] + "' class=\"filled-in\" id=\"" + response[i] + "cbview\" /> " +
                             "<label class='truncate black-text' for=\"" + response[i] + "cbview\">" + facebook_name_key[response[i]] + "</label> " +
-                            "</div><div id='" + response[i] + "color" + "' style='height: 20px' class='col s1'></div><div class='col center offset-s1 s1'><a class='black-text' target='_blank' href='//facebook.com/" + response[i] + "'><i class=\"material-icons\">face</i></a></div> </div> </li>");
+                            "</div><div id='" + response[i] + "color" + "' style='height: 20px' class='col s1'></div> </div> </li>");
                     //drawFriendOnCalendar("+response[i]+")
                 }
 
