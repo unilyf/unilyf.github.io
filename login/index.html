@@ -160,7 +160,7 @@
                         //non semester 1 class.
                     }
                 }
-                if (timetablesur.length > 0 && whose != "my") {
+                if (timetablesur.length > 0 && whose != "my" && whose!= 'myself') {
                     $("#currently_viewing_list").append("<li id='" + whose + "currentlyviewing" + "' class='collection-item'><div>" + facebook_name_key[whose] + "<a style='color: " + unitcolor['friendstatic'] + "' onclick='removethisguy(" + whose + ")' class='secondary-content'><i class='material-icons'>clear</i></a></div></li>");
                 }
             } else if (whose != 'my' && (whose != 'myself') && (timetablesur == [] || timetablesur.length == 0)) {
