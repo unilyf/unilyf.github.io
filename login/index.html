@@ -145,7 +145,7 @@
                         }
 
                         console.log(unit=="" && originalwhose=="my", originalwhose);
-                        if(unit=="" && originalwhose=="my"){
+                        if((unit=="" || unit=='Click to delete') && originalwhose=="my"){
                             whose = "myself";
                         }else{
                             whose = originalwhose;
@@ -688,7 +688,7 @@
 
 
 
-                        var unitstring = "**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
+                        var unitstring = "Click to delete**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
                         drawoncalendar([unitstring], "myself");
 
                         var end_date = start.date() + "/" + start.month() + "-21/10";
@@ -801,6 +801,9 @@
                 ////console.log(e);
                 //console.log(data.toString(), elementinLinear(timetablesur, ""+data.trim()));
                 if (e == "---") {
+                    newEvent.title = title;
+                    newEvent.description = "";
+                } else if(e=='myself'){
                     newEvent.title = title;
                     newEvent.description = "";
                 } else if(havetimetable){
