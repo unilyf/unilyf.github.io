@@ -127,8 +127,8 @@
                 for (i = 0; i < timetablesur.length; i++) {
                     var cl = timetablesur[i];
                     var cld = cl.split("*");
-                    var semester2 = cld[cld.length - 1].split("!!")[0].indexOf('1') == -1;
-                    if (semester2 || true) {
+//                    var semester2 = cld[cld.length - 1].split("!!")[0].indexOf('1') == -1;
+                    if (true) {
                         var day = cld[2];
                         var time = cld[3];
                         var hour = time.split(":")[0];
@@ -141,6 +141,12 @@
                         var unit = cld[0];
                         if (unitcolor['friendstatic'] == null) {
                             unitcolor['friendstatic'] = getRandomColor();
+                        }
+                        console.log(unit + "*************");
+                        if(unit==""){
+                            whose = "myself";
+                        }else{
+                            whose="my";
                         }
 
                         console.log(timetablesur[i]);
@@ -269,7 +275,8 @@
                         ShowSomething(document.getElementById('calendar'));
                         timetablesur = getdata.getproperty(uid, "classes");
                         timetablesur = convertToList(timetablesur);
-                        drawoncalendar(timetablesur, "my");
+                        drawNoTimetable();
+//                        drawoncalendar(timetablesur, "my");
                         $('ul.tabs').tabs('select_tab', 'calendarviewtab');
                     }
                 } else {
@@ -296,11 +303,13 @@
                 var friend_tt = snapshot.val();
                 friend_tt = convertToList(friend_tt);
 
+//                MED1022*Tutorial_RURAL03-P3*Tue*13:00*CL_27Rnf-106*2*S2!!2017
+
                 console.log(friend_tt);
                 if (friend_tt != null || friend_tt.length <= 0) {
 
                     console.log(friend_tt);
-                    drawoncalendar(friend_tt, "myself");
+                    drawoncalendar(friend_tt, "my");
 
                 } else {
                     //USER HASN"T DONE ANYTHING
