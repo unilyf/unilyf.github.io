@@ -770,7 +770,7 @@
 
 
 
-                            var unitstring = "**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
+                            var unitstring = "Click to delete**"+day+"*"+start.hour()+":"+start.minute()+"**"+duration.replace(".","~")+"*S2!!2017";
 //                            alert(unitstring);
                             firebase.database().ref('users/' + uid + "/classes/" + unitstring).set(null);
 
