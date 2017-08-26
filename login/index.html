@@ -124,6 +124,7 @@
                 unitcolor = {};
                 //TODO check length 0 here to uncheck/provide message that other person timetable doesn't have current
                 console.log(whose, timetablesur);
+                var originalwhose = whose;
                 for (i = 0; i < timetablesur.length; i++) {
                     var cl = timetablesur[i];
                     var cld = cl.split("*");
@@ -142,12 +143,15 @@
                         if (unitcolor['friendstatic'] == null) {
                             unitcolor['friendstatic'] = getRandomColor();
                         }
-                        console.log(unit + "*************");
-                        if(unit==""){
+
+                        console.log(unit=="" && originalwhose=="my", originalwhose);
+                        if(unit=="" && originalwhose=="my"){
                             whose = "myself";
                         }else{
-                            whose="my";
+                            whose = originalwhose;
                         }
+
+                        console.log(unit + "\t*************\t" + whose);
 
                         console.log(timetablesur[i]);
 
